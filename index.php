@@ -24,10 +24,7 @@ function calculateEMA($data, $period = 65) {
 
 $stocks = ['AZJ.AX', 'BHP.AX', 'GDX.AX', 'HVN.AX', 'MYR.AX', 'NST.AX', 'PSC.AX', 'RIO.AX', 'STO.AX', 'WBC.AX', 'WES.AX'];
 
-$emailContent = "<html><head><style>
-    .green { color: green; }
-    .red { color: red; }
-</style></head><body><h1>Australian Stock Status</h1><ul>";
+$emailContent = "<html><head><title>Australian Stock Status</title></head><body><h1>Australian Stock Status</h1><ul>";
 
 $sendEmail = false;
 
@@ -45,24 +42,33 @@ foreach ($stocks as $stock) {
             return array_combine($headers, str_getcsv($line));
         }, $lines);
 
-        $ema = calculateEMA($data);
+        $ema15 = calculateEMA($data, 15);
+        $ema65 = calculateEMA($data, 65);
         $latestClose = end($data)['Close'];
-        $latestEma = end($ema);
+        $latestEma15 = end($ema15);
+        $latestEma65 = end($ema65);
 
         $formattedClose = '$' . number_format((float)$latestClose, 2, '.', '');
-        $formattedEma = '$' . number_format((float)$latestEma, 2, '.', '');
+        $formattedEma15 = '$' . number_format((float)$latestEma15, 2, '.', '');
+        $formattedEma65 = '$' . number_format((float)$latestEma65, 2, '.', '');
 
-        if ($latestClose < $latestEma) {
-            $emailContent .= "<li class='red'>$stock: Close = $formattedClose, 65-day EMA = $formattedEma</li>";
-            $sendEmail = true;
-            echo "<li class='red'>$stock: Close = $formattedClose, 65-day EMA = $formattedEma</li>";
+        if ($latestClose > $latestEma15) {
+            $color = 'green';
+        } elseif ($latestClose > $latestEma65) {
+            $color = 'orange';
         } else {
-            $emailContent .= "<li class='green'>$stock: Close = $formattedClose, 65-day EMA = $formattedEma</li>";
-            echo "<li class='green'>$stock: Close = $formattedClose, 65-day EMA = $formattedEma</li>";
+            $color = 'red';
+        }
+
+        $emailContent .= "<li style='color: $color;'>$stock: Close = $formattedClose, 15-day EMA = $formattedEma15, 65-day EMA = $formattedEma65</li>";
+        echo "<li style='color: $color;'>$stock: Close = $formattedClose, 15-day EMA = $formattedEma15, 65-day EMA = $formattedEma65</li>";
+
+        if ($color !== 'green') {
+            $sendEmail = true;
         }
     } catch (Exception $e) {
-        $emailContent .= "<li class='red'>$stock: Error - " . $e->getMessage() . "</li>";
-        echo "<li class='red'>$stock: Error - " . $e->getMessage() . "</li>";
+        $emailContent .= "<li style='color: red;'>$stock: Error - " . $e->getMessage() . "</li>";
+        echo "<li style='color: red;'>$stock: Error - " . $e->getMessage() . "</li>";
     }
 }
 
@@ -78,38 +84,3 @@ if ($sendEmail) {
     mail($to, $subject, $emailContent, $headers);
 }
 ?>
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Stock Status</title>
-    <style>
-        .green { color: green; }
-        .red { color: red; }
-        #spinner {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 9999;
-        }
-        .spinner-border {
-            width: 4rem;
-            height: 4rem;
-        }
-    </style>
-    <script>
-        window.onload = function() {
-            document.getElementById('spinner').style.display = 'none';
-        };
-    </script>
-</head>
-<body>
-<div id="spinner">
-    <div class="spinner-border" role="status">
-        <span class="sr-only">Loading...</span>
-    </div>
-</div>
-</body>
-</html>
