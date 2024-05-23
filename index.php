@@ -22,16 +22,18 @@ function calculateEMA($data, $period = 65) {
     return $ema;
 }
 
-$currentPortfolio = ['AZJ.AX', 'BHP.AX', 'GDX.AX', 'HVN.AX', 'MYR.AX', 'NST.AX', 'PSC.AX', 'RIO.AX', 'STO.AX', 'WBC.AX', 'WES.AX'];
-$dreamteamPortfolio = ['MMA.AX', 'DUG.AX'];
+$stocks = [
+    'Current Portfolio' => ['AZJ.AX', 'BHP.AX', 'GDX.AX', 'HVN.AX', 'MYR.AX', 'NST.AX', 'PSC.AX', 'RIO.AX', 'STO.AX', 'WBC.AX', 'WES.AX'],
+    'Dreamteam' => ['AWC.AX', 'ANG.AX', 'BGA.AX', 'DRO.AX', 'DUG.AX', 'FND.AX', 'GTK.AX', 'GNP.AX', 'GMG.AX', 'GQG.AX', 'KPG.AX', 'LOV.AX', 'MRM.AX', 'REG.AX', 'RUL.AX', 'SFR.AX', 'SIG.AX', 'SKS.AX', 'TOP.AX', 'TUA.AX', 'URW.AX', 'UNI.AX', 'VEE.AX', 'WTC.AX', 'ZIP.AX']
+];
 
 $emailContent = "<html><head><title>Stock Status</title></head><body>";
 
 $sendEmail = false;
 
 function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailContent) {
-    $emailContent .= "<h1>$portfolioName</h1><ul>";
-    echo "<h1>$portfolioName</h1><ul>";
+    $emailContent .= "<h1>$portfolioName</h1><table style='border-collapse: collapse; width: 100%;'><tr><th style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>Stock</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>Price</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>15-day EMA</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>65-day EMA</th></tr>";
+    echo "<h1>$portfolioName</h1><table style='border-collapse: collapse; width: 100%;'><tr><th style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>Stock</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>Price</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>15-day EMA</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>65-day EMA</th></tr>";
 
     foreach ($portfolio as $stock) {
         try {
@@ -47,8 +49,8 @@ function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailConten
                 return array_combine($headers, str_getcsv($line));
             }, $lines);
 
-            $ema15 = calculateEMA($data, 15);
-            $ema65 = calculateEMA($data, 65);
+            $ema15 = calculateEMA($data, 21);
+            $ema65 = calculateEMA($data, 91);
             $latestClose = end($data)['Close'];
             $latestEma15 = end($ema15);
             $latestEma65 = end($ema65);
@@ -65,26 +67,29 @@ function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailConten
                 $color = 'red';
             }
 
-            $emailContent .= "<li style='color: $color;'>$stock: Close = $formattedClose, 15-day EMA = $formattedEma15, 65-day EMA = $formattedEma65</li>";
-            echo "<li style='color: $color;'>$stock: Close = $formattedClose, 15-day EMA = $formattedEma15, 65-day EMA = $formattedEma65</li>";
+            $emailContent .= "<tr style='color: $color;'><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$stock</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma15</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma65</td></tr>";
+            echo "<tr style='color: $color;'><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$stock</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma15</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma65</td></tr>";
 
             if ($color !== 'green') {
                 $sendEmail = true;
             }
         } catch (Exception $e) {
-            $emailContent .= "<li style='color: red;'>$stock: Error - " . $e->getMessage() . "</li>";
-            echo "<li style='color: red;'>$stock: Error - " . $e->getMessage() . "</li>";
+            $emailContent .= "<tr style='color: red;'><td colspan='4' style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$stock: Error - " . $e->getMessage() . "</td></tr>";
+            echo "<tr style='color: red;'><td colspan='4' style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$stock: Error - " . $e->getMessage() . "</td></tr>";
         }
     }
 
-    $emailContent .= "</ul>";
-    echo "</ul>";
+    $emailContent .= "</table>";
+    echo "</table>";
 }
 
-processPortfolio($currentPortfolio, 'Current Portfolio', $sendEmail, $emailContent);
-processPortfolio($dreamteamPortfolio, 'Dreamteam', $sendEmail, $emailContent);
+foreach ($stocks as $portfolioName => $portfolio) {
+    processPortfolio($portfolio, $portfolioName, $sendEmail, $emailContent);
+}
 
 $emailContent .= "</body></html>";
+
+echo "</body></html>";
 
 if ($sendEmail) {
     $to = "david@goodfunnysmart.com";
@@ -93,6 +98,6 @@ if ($sendEmail) {
     $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
     $headers .= 'From: mail@greache.com' . "\r\n";
 
-    mail($to, $subject, $emailContent, $headers);
-}
-?>
+         mail($to, $subject, $emailContent, $headers);
+         }
+         ?>
