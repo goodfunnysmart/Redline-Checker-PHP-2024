@@ -31,13 +31,14 @@ $emailContent = "<html><head><title>Stock Status</title><style>
     table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; }
     th, td { padding: 8px; text-align: center; border: 1px solid lightgrey; }
     th { background-color: #f2f2f2; }
+    .light-green { background-color: #ccffcc; }
 </style></head><body>";
 
 $sendEmail = false;
 
 function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailContent) {
-    $emailContent .= "<h1>$portfolioName</h1><table><tr><th>Stock</th><th>Price</th><th>15-day EMA</th><th>65-day EMA</th><th>% Difference</th><th>Yesterday</th></tr>";
-    echo "<h1>$portfolioName</h1><table style='border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;'><tr><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>Stock</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>Price</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>15-day EMA</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>65-day EMA</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>% Difference</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>Yesterday</th></tr>";
+    $emailContent .= "<h1>$portfolioName</h1><table><tr><th>Stock</th><th>Yesterday</th><th>Price</th><th>15-day EMA</th><th>65-day EMA</th><th>% Difference</th></tr>";
+    echo "<h1>$portfolioName</h1><table style='border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;'><tr><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>Stock</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>Yesterday</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>Price</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>15-day EMA</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>65-day EMA</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>% Difference</th></tr>";
 
     foreach ($portfolio as $stock) {
         try {
@@ -84,8 +85,13 @@ function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailConten
                 $yesterdayColor = 'red';
             }
 
-            $emailContent .= "<tr style='color: $color;'><td>$stock</td><td>$formattedClose</td><td>$formattedEma15</td><td>$formattedEma65</td><td>$formattedPercentageDifference</td><td style='color: $yesterdayColor;'>$formattedYesterdayClose</td></tr>";
-            echo "<tr style='color: $color;'><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$stock</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma15</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma65</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedPercentageDifference</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey; color: $yesterdayColor;'>$formattedYesterdayClose</td></tr>";
+            $rowClass = '';
+            if ($yesterdayColor == 'orange' && $color == 'green') {
+                $rowClass = 'light-green';
+            }
+
+            $emailContent .= "<tr class='$rowClass' style='color: $color;'><td>$stock</td><td style='color: $yesterdayColor;'>$formattedYesterdayClose</td><td>$formattedClose</td><td>$formattedEma15</td><td>$formattedEma65</td><td>$formattedPercentageDifference</td></tr>";
+            echo "<tr class='$rowClass' style='color: $color;'><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$stock</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey; color: $yesterdayColor;'>$formattedYesterdayClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma15</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma65</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedPercentageDifference</td></tr>";
 
             if ($color !== 'green') {
                 $sendEmail = true;
