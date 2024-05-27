@@ -86,12 +86,18 @@ function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailConten
             }
 
             $rowClass = '';
+            $rowStyle = '';
             if ($yesterdayColor == 'orange' && $color == 'green') {
                 $rowClass = 'light-green';
+                $rowStyle = 'background-color: #ccffcc;';
             }
 
-            $emailContent .= "<tr class='$rowClass' style='color: $color;'><td>$stock</td><td style='color: $yesterdayColor;'>$formattedYesterdayClose</td><td>$formattedClose</td><td>$formattedEma15</td><td>$formattedEma65</td><td>$formattedPercentageDifference</td></tr>";
-            echo "<tr class='$rowClass' style='color: $color;'><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$stock</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey; color: $yesterdayColor;'>$formattedYesterdayClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma15</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma65</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedPercentageDifference</td></tr>";
+            // Update the stock URL to use .ASX instead of .AX
+            $stockUrl = "https://www.google.com/finance/quote/" . str_replace('.AX', ':ASX', $stock) . "?hl=en";
+            $stockLink = "<a href='$stockUrl' target='_blank'>$stock</a>";
+
+            $emailContent .= "<tr class='$rowClass' style='color: $color; $rowStyle'><td>$stockLink</td><td style='color: $yesterdayColor;'>$formattedYesterdayClose</td><td>$formattedClose</td><td>$formattedEma15</td><td>$formattedEma65</td><td>$formattedPercentageDifference</td></tr>";
+            echo "<tr class='$rowClass' style='color: $color; $rowStyle'><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$stockLink</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey; color: $yesterdayColor;'>$formattedYesterdayClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma15</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma65</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedPercentageDifference</td></tr>";
 
             if ($color !== 'green') {
                 $sendEmail = true;
@@ -115,7 +121,7 @@ $emailContent .= "</body></html>";
 echo "</body></html>";
 
 if ($sendEmail) {
-    $to = "david@goodfunnysmart.com";
+    $to = "redline@greache.com";
     $subject = "Stock Alert";
     $headers = "MIME-Version: 1.0" . "\r\n";
     $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
