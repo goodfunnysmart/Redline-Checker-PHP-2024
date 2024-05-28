@@ -38,8 +38,8 @@ $emailContent = "<html><head><title>Stock Status</title><style>
 $sendEmail = false;
 
 function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailContent) {
-    $emailContent .= "<h1>$portfolioName</h1><table><tr><th>Stock</th><th>Yesterday</th><th>Price</th><th>15-day EMA</th><th>65-day EMA</th><th>% Difference</th></tr>";
-    echo "<h1>$portfolioName</h1><table style='border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;'><tr><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>Stock</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>Yesterday</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>Price</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>15-day EMA</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>65-day EMA</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>% Difference</th></tr>";
+    $emailContent .= "<h1>$portfolioName</h1><table><tr><th>Stock</th><th>Yesterday</th><th>Price</th><th>15-day EMA</th><th>65-day EMA</th><th>% Difference</th><th>BUY 'x' Shares</th></tr>";
+    echo "<h1>$portfolioName</h1><table style='border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;'><tr><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>Stock</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>Yesterday</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>Price</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>15-day EMA</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>65-day EMA</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>% Difference</th><th style='padding: 8px; text-align: center; border: 1px solid lightgrey; background-color: #f2f2f2;'>BUY 'x' Shares</th></tr>";
 
     foreach ($portfolio as $stock) {
         try {
@@ -70,6 +70,9 @@ function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailConten
             $percentageDifference = (($latestClose - $latestEma65) / $latestEma65) * 100;
             $formattedPercentageDifference = number_format($percentageDifference, 2, '.', '') . '%';
 
+            $newColumnValue = floor(50 / ($latestClose - $latestEma65));
+            $formattedNewColumnValue = number_format($newColumnValue);
+
             if ($latestClose > $latestEma15) {
                 $color = 'green';
             } elseif ($latestClose > $latestEma65) {
@@ -97,18 +100,18 @@ function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailConten
             }
 
             // Update the stock URL to use .ASX instead of .AX
-            $stockUrl = "https://www.google.com/finance/quote/" . str_replace('.AX', '.ASX', $stock) . "?hl=en";
+            $stockUrl = "https://www.google.com/finance/quote/" . str_replace('.AX', ':ASX', $stock) . "?hl=en";
             $stockLink = "<a href='$stockUrl' target='_blank'>$stock</a>";
 
-            $emailContent .= "<tr class='$rowClass' style='color: $color; $rowStyle'><td>$stockLink</td><td style='color: $yesterdayColor;'>$formattedYesterdayClose</td><td>$formattedClose</td><td>$formattedEma15</td><td>$formattedEma65</td><td>$formattedPercentageDifference</td></tr>";
-            echo "<tr class='$rowClass' style='color: $color; $rowStyle'><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$stockLink</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey; color: $yesterdayColor;'>$formattedYesterdayClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma15</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma65</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedPercentageDifference</td></tr>";
+            $emailContent .= "<tr class='$rowClass' style='color: $color; $rowStyle'><td>$stockLink</td><td style='color: $yesterdayColor;'>$formattedYesterdayClose</td><td>$formattedClose</td><td>$formattedEma15</td><td>$formattedEma65</td><td>$formattedPercentageDifference</td><td>$formattedNewColumnValue</td></tr>";
+            echo "<tr class='$rowClass' style='color: $color; $rowStyle'><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$stockLink</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey; color: $yesterdayColor;'>$formattedYesterdayClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedClose</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma15</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedEma65</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedPercentageDifference</td><td style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$formattedNewColumnValue</td></tr>";
 
             if ($color !== 'green') {
                 $sendEmail = true;
             }
         } catch (Exception $e) {
-            $emailContent .= "<tr style='color: red;'><td colspan='6'>$stock: Error - " . $e->getMessage() . "</td></tr>";
-            echo "<tr style='color: red;'><td colspan='6' style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$stock: Error - " . $e->getMessage() . "</td></tr>";
+            $emailContent .= "<tr style='color: red;'><td colspan='7'>$stock: Error - " . $e->getMessage() . "</td></tr>";
+            echo "<tr style='color: red;'><td colspan='7' style='padding: 8px; text-align: center; border: 1px solid lightgrey;'>$stock: Error - " . $e->getMessage() . "</td></tr>";
         }
     }
 
