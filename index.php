@@ -23,7 +23,7 @@ function calculateEMA($data, $period = 65) { // Default to 65-day EMA
 }
 
 $stocks = [
-    'Current Portfolio' => ['AZJ.AX', 'BHP.AX', 'GDX.AX', 'HVN.AX', 'MYR.AX', 'NST.AX', 'PSC.AX', 'RIO.AX', 'STO.AX', 'WBC.AX', 'WES.AX'],
+    'Current Portfolio' => ['^AXJO', 'AZJ.AX', 'BHP.AX', 'GDX.AX', 'HVN.AX', 'MYR.AX', 'NST.AX', 'PSC.AX', 'RIO.AX', 'STO.AX', 'WBC.AX', 'WES.AX'],
     'Dreamteam' => ['AWC.AX', 'ANG.AX', 'BGA.AX', 'DRO.AX', 'DUG.AX', 'FND.AX', 'GTK.AX', 'GNP.AX', 'GMG.AX', 'GQG.AX', 'KPG.AX', 'LOV.AX', 'MRM.AX', 'REG.AX', 'RUL.AX', 'SFR.AX', 'SIG.AX', 'SKS.AX', 'TOP.AX', 'TUA.AX', 'URW.AX', 'UNI.AX', 'VEE.AX', 'WTC.AX', 'ZIP.AX']
 ];
 
@@ -32,6 +32,7 @@ $emailContent = "<html><head><title>Stock Status</title><style>
     th, td { padding: 8px; text-align: center; border: 1px solid lightgrey; }
     th { background-color: #f2f2f2; }
     .light-green { background-color: #ccffcc; }
+    .light-red { background-color: #ffcccc; }
 </style></head><body>";
 
 $sendEmail = false;
@@ -90,10 +91,13 @@ function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailConten
             if ($yesterdayColor == 'orange' && $color == 'green') {
                 $rowClass = 'light-green';
                 $rowStyle = 'background-color: #ccffcc;';
+            } elseif (($yesterdayColor == 'orange' || $yesterdayColor == 'green') && $color == 'red') {
+                $rowClass = 'light-red';
+                $rowStyle = 'background-color: #ffcccc;';
             }
 
             // Update the stock URL to use .ASX instead of .AX
-            $stockUrl = "https://www.google.com/finance/quote/" . str_replace('.AX', ':ASX', $stock) . "?hl=en";
+            $stockUrl = "https://www.google.com/finance/quote/" . str_replace('.AX', '.ASX', $stock) . "?hl=en";
             $stockLink = "<a href='$stockUrl' target='_blank'>$stock</a>";
 
             $emailContent .= "<tr class='$rowClass' style='color: $color; $rowStyle'><td>$stockLink</td><td style='color: $yesterdayColor;'>$formattedYesterdayClose</td><td>$formattedClose</td><td>$formattedEma15</td><td>$formattedEma65</td><td>$formattedPercentageDifference</td></tr>";
