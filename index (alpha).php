@@ -1,21 +1,29 @@
 <?php
 function fetchData($symbol) {
-    $url = "https://query1.finance.yahoo.com/v7/finance/download/{$symbol}?period1=0&period2=" . time() . "&interval=1d&events=history&includeAdjustedClose=true";
+    $apiKey = 'YOUR_ALPHA_VANTAGE_API_KEY';
+    $symbol = str_replace('.AX', '.ASX', $symbol); // Adjust symbol format for Alpha Vantage
+    $url = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={$symbol}&apikey={$apiKey}&outputsize=full&datatype=csv";
+    $cacheFile = __DIR__ . "/cache/{$symbol}.csv";
+    $cacheTime = 3600; // 1 hour
 
-    $options = [
-        'http' => [
-            'header' => "User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;)\r\n"
-        ]
-    ];
+    if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
+        return file_get_contents($cacheFile);
+    }
 
-    $context = stream_context_create($options);
-    return file_get_contents($url, false, $context);
+    $data = @file_get_contents($url);
+
+    if ($data !== false) {
+        file_put_contents($cacheFile, $data);
+        return $data;
+    }
+
+    throw new Exception("Failed to fetch data for $symbol");
 }
 
-function calculateEMA($data, $period = 65) { // Default to 65-day EMA
+function calculateEMA($data, $period = 65) {
     $ema = [];
     $multiplier = 2 / ($period + 1);
-    $prices = array_filter(array_column($data, 'Close'), 'is_numeric'); // Ensure only numeric values are included
+    $prices = array_filter(array_column($data, 'close'), 'is_numeric'); // Ensure only numeric values are included
 
     if (count($prices) < $period) {
         throw new Exception('Not enough data to calculate EMA');
@@ -77,8 +85,7 @@ function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailConten
 
             $percentageDifference = (($latestClose - $latestEma65) / $latestEma65) * 100;
             $formattedPercentageDifference = number_format($percentageDifference, 2, '.', '') . '%';
-            
-            // Calculate position size column - edit the number here (trading capital/10) as trading capital changes
+
             $newColumnValue = floor(50 / ($latestClose - $latestEma65));
             $formattedNewColumnValue = number_format($newColumnValue);
 
@@ -127,6 +134,7 @@ function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailConten
     $emailContent .= "</table>";
     echo "</table>";
 }
+
 
 foreach ($stocks as $portfolioName => $portfolio) {
     processPortfolio($portfolio, $portfolioName, $sendEmail, $emailContent);
