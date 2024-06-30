@@ -4,7 +4,7 @@ function fetchData($symbol) {
 
     $options = [
         'http' => [
-            'header' => "User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;)\r\n"
+            'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3\r\n"
         ]
     ];
 
@@ -12,10 +12,10 @@ function fetchData($symbol) {
     return file_get_contents($url, false, $context);
 }
 
-function calculateEMA($data, $period = 65) { // Default to 65-day EMA
+function calculateEMA($data, $period = 65) {
     $ema = [];
     $multiplier = 2 / ($period + 1);
-    $prices = array_filter(array_column($data, 'Close'), 'is_numeric'); // Ensure only numeric values are included
+    $prices = array_filter(array_column($data, 'Close'), 'is_numeric');
 
     if (count($prices) < $period) {
         throw new Exception('Not enough data to calculate EMA');
@@ -31,8 +31,8 @@ function calculateEMA($data, $period = 65) { // Default to 65-day EMA
 }
 
 $stocks = [
-    'Current Portfolio' => ['^AXJO', 'AZJ.AX', 'BHP.AX', 'GDX.AX', 'HVN.AX', 'MYR.AX', 'NST.AX', 'PSC.AX', 'RIO.AX', 'STO.AX', 'WBC.AX', 'WES.AX'],
-    'Dreamteam' => ['AWC.AX', 'ANG.AX', 'BGA.AX', 'DRO.AX', 'DUG.AX', 'FND.AX', 'GTK.AX', 'GNP.AX', 'GMG.AX', 'GQG.AX', 'KPG.AX', 'LOV.AX', 'MRM.AX', 'REG.AX', 'RUL.AX', 'SFR.AX', 'SIG.AX', 'SKS.AX', 'TOP.AX', 'TUA.AX', 'URW.AX', 'UNI.AX', 'VEE.AX', 'WTC.AX', 'ZIP.AX']
+    'Current Portfolio' => ['^AXJO', 'AWC.AX', 'ANG.AX', 'BGA.AX', 'BHP.AX', 'GDX.AX', 'HVN.AX', 'IHD.AX', 'MRM.AX', 'NST.AX', 'PSC.AX',  'REG.AX','RIO.AX', 'STO.AX', 'VHY.AX', 'WBC.AX' ],
+    'Dreamteam' => ['AWC.AX', 'BGA.AX', 'DRO.AX', 'DUG.AX', 'FND.AX', 'GTK.AX', 'GNP.AX', 'GMG.AX', 'GQG.AX', 'KPG.AX', 'LOV.AX',  'RUL.AX', 'SFR.AX', 'SIG.AX', 'SKS.AX', 'TOP.AX', 'TUA.AX', 'URW.AX', 'UNI.AX', 'VEE.AX', 'WTC.AX', 'ZIP.AX']
 ];
 
 $emailContent = "<html><head><title>Stock Status</title><style>
@@ -41,6 +41,7 @@ $emailContent = "<html><head><title>Stock Status</title><style>
     th { background-color: #f2f2f2; }
     .light-green { background-color: #ccffcc; }
     .light-red { background-color: #ffcccc; }
+    .light-orange { background-color: #ffebcc; }
 </style></head><body>";
 
 $sendEmail = false;
@@ -79,7 +80,7 @@ function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailConten
             $formattedPercentageDifference = number_format($percentageDifference, 2, '.', '') . '%';
             
             // Calculate position size column - edit the number here (trading capital/10) as trading capital changes
-            $newColumnValue = floor(50 / ($latestClose - $latestEma65));
+            $newColumnValue = floor(60 / ($latestClose - $latestEma65));
             $formattedNewColumnValue = number_format($newColumnValue);
 
             if ($latestClose > $latestEma15) {
@@ -100,12 +101,17 @@ function processPortfolio($portfolio, $portfolioName, &$sendEmail, &$emailConten
 
             $rowClass = '';
             $rowStyle = '';
-            if ($yesterdayColor == 'orange' && $color == 'green') {
+
+            // Check the new condition
+            if (($yesterdayColor == 'orange' && $color == 'green') && $latestEma15 > $latestEma65) {
                 $rowClass = 'light-green';
                 $rowStyle = 'background-color: #ccffcc;';
             } elseif (($yesterdayColor == 'orange' || $yesterdayColor == 'green') && $color == 'red') {
                 $rowClass = 'light-red';
                 $rowStyle = 'background-color: #ffcccc;';
+            } elseif ($yesterdayColor == 'green' && $color == 'orange') {
+                $rowClass = 'light-orange';
+                $rowStyle = 'background-color: #ffebcc;';
             }
 
             // Update the stock URL to use .ASX instead of .AX
